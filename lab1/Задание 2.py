@@ -19,11 +19,7 @@ def analyze_logs(log_text):
     uppercase_words = re.findall(uppercase_pattern, log_text)
     results['uppercase_words'] = uppercase_words
 
-    # 4. Замена email-адресов
-    email_pattern = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
-    protected_log = re.sub(email_pattern, '[EMAIL PROTECTED]', log_text)
-    results['protected_log'] = protected_log
-
+ 
     return results
 
 
