@@ -1,54 +1,64 @@
-import re
+class Student:
+    def __init__(self, name, group, grades):
+        self.name = name
+        self.group = group
+        self.grades = [int(grade) for grade in grades]
 
+    def average_grade(self):
+        return sum(self.grades) / len(self.grades)
 
-def analyze_logs(log_text):
-    results = {}
-
-    # 1. Поиск IPv4 адресов
-    ip_pattern = r'\b(?:\d{1,3}\.){3}\d{1,3}\b'
-    ip_addresses = re.findall(ip_pattern, log_text)
-    results['ip_addresses'] = ip_addresses
-
-    # 2. Поиск временных меток
-    timestamp_pattern = r'\b\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\b'
-    timestamps = re.findall(timestamp_pattern, log_text)
-    results['timestamps'] = timestamps
-
-    # 3. Поиск слов в UPPERCASE
-    uppercase_pattern = r'\b[A-ZА-Я]{2,}\b'
-    uppercase_words = re.findall(uppercase_pattern, log_text)
-    results['uppercase_words'] = uppercase_words
-
-    return results
+    def is_excellent(self):
+        return self.average_grade() >= 4.5
 
 
 def main():
+    students = []
 
-    log_text = """
-2023-10-15 14:30:25 Сервер запущен. IP: 192.168.1.1
-2023-10-15 14:35:40 Пользователь ADMIN вошел в систему с IP 10.0.0.45
-2023-10-15 14:40:15 ОШИБКА: Соединение с 8.8.8.8 прервано
-2023-10-15 14:45:30 Отправлено письмо на email: user@example.com
-2023-10-15 14:50:00 Получено письмо от admin@server.com
-2023-10-15 14:55:45 КРИТИЧЕСКАЯ ОШИБКА в модуле SECURITY
-2023-10-15 15:00:10 DNS запрос к 1.1.1.1 неуспешен
-2023-10-15 15:05:25 Пользователь TESTUSER вышел из системы
-2023-10-15 15:10:40 Резервное копирование завершено УСПЕШНО
-"""
-    results = analyze_logs(log_text)
-    
-    print("\n1. Найденные IPv4 адреса:")
-    for ip in results['ip_addresses']:
-        print(f"   - {ip}")
+    try:
+        with open('students.txt', 'r', encoding='utf-8') as file:
+            for line in file:
+                line = line.strip()
+                if line:
+                    parts = line.split(';')
+                    if len(parts) >= 3:
+                        name = parts[0]
+                        group = parts[1]
+                        grades = parts[2].split(',')
+                        student = Student(name, group, grades)
+                        students.append(student)
+    except FileNotFoundError:
+        print("Ошибка: Файл students.txt не найден!")
+        return
 
-    print("\n2. Найденные временные метки:")
-    for timestamp in results['timestamps']:
-        print(f"   - {timestamp}")
+    # Запись отличников в файл
+    excellent_students = []
+    try:
+        with open('excellent_students.txt', 'w', encoding='utf-8') as file:
+            for student in students:
+                if student.is_excellent():
+                    file.write(f"{student.name} - {student.group}\n")
+                    excellent_students.append(student)
+        print(f"Информация об отличниках записана в файл excellent_students.txt")
+    except IOError:
+        print("Ошибка при записи в файл excellent_students.txt")
 
-    print("\n3. Найденные UPPERCASE")
-    for word in results['uppercase_words']:
-        print(f"   - {word}")
+    # Вычисление среднего балла по группам
+    group_averages = {}
+    group_counts = {}
 
+    for student in students:
+        if student.group not in group_averages:
+            group_averages[student.group] = 0
+            group_counts[student.group] = 0
+        group_averages[student.group] += student.average_grade()
+        group_counts[student.group] += 1
+
+    # Вывод результатов
+    print("\nСредний балл для каждой группы:")
+    print("-" * 30)
+    for group in sorted(group_averages.keys()):
+        average = group_averages[group] / group_counts[group]
+        print(f"Группа {group}: {average:.2f}")
 
 if __name__ == "__main__":
     main()
